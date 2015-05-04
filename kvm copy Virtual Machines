@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#ensure script is being run as root
+if [ `whoami` != root ]; then
+   echo "ERROR: This script must be run as root" 1>&2
+   exit 1
+fi
+
+#set variables
+IP=$1  #just the variables of $1 is input the last one. example IP 192.168..1.1 you just only input 1
+name=ser6-$IP
+uuid=$IP
+filename=ser6-$IP
+mac="`echo $IP | sed 's/^.//'`"
+vnc=59`echo $IP | sed 's/^.//'`
+mkdir -p /data/kvm/clustserver/ser$IP
+path="/data/kvm/clustserver/ser$IP"
+
+#copy file to destination
+cp /data/kvm/clustserver/demo.xml /data/kvm/clustserver/ser$IP/$name.xml
+cp /data/kvm/clustserver/demo.qcow2 /data/kvm/clustserver/ser$IP/$name.qcow2
+
+#Judge the path "/mnt/file" whether mount or umount
+
+command=`mount | grep "/mnt/file"`
+if [ $? != 0 ]; then
+        printf  "Do not need umount Action\n"
+else
+        printf   "Already mounted,need umount\n"
+        umount /mnt/file
+fi 
+
+#change the  system file 
+mkdir -p /mnt/file
+guestmount -a /data/kvm/clustserver/ser$IP/$name.qcow2 -m /dev/vg_demo/lv_root --rw /mnt/file
+rm -rf /mnt/file/etc/udev/rules.d/70-persistent-net.rules 
+sed -i "s/DEMO/$IP/g" /mnt/file/etc/sysconfig/network-scripts/ifcfg-eth0 
+sed -i "s/DEMO/$name/g" /mnt/file/etc/sysconfig/network
+umount /mnt/file
+
+#change the xml file
+sed -i "s/demo/$name/g" /data/kvm/clustserver/ser$IP/$name.xml  #change name and virtual machine name
+sed -i "s/xxx/$IP/g" /data/kvm/clustserver/ser$IP/$name.xml     #change uuid
+sed -i "s/ee/$mac/g" /data/kvm/clustserver/ser$IP/$name.xml     #chang mac
+sed -i "s/5901/$vnc/g" /data/kvm/clustserver/ser$IP/$name.xml   #change vnc port
+sed -i "s/kkk/ser$IP/g" /data/kvm/clustserver/ser$IP/$name.xml  #change virtual machine path
+
+#Registration xml to kvm
+virsh define /data/kvm/clustserver/ser$IP/$name.xml
+
+#start the new virtual machine
+virsh start $name
+
+#The new machine information
+echo 192.168.6.$IP   #assign network 192.168.6.0/24
+echo kvm name is $name
+echo vnc port is $vnc

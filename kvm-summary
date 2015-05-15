@@ -67,3 +67,6 @@ virt-install --name  kscfg --ram 2048  --disk=./kscfg.qcow2,size=50 --network br
 
 
 --nonsparse	Fully allocate the storage when creating. This is deprecated in favort of "--disk"
+
+
+http://www.cyberciti.biz/faq/kvm-virtualization-in-redhat-centos-scientific-linux-6/

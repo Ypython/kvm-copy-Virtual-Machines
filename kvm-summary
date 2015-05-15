@@ -1,0 +1,69 @@
+virt-install --name test1 --ram 2048 --disk path=./test1.qcow2,size=10 --vcpus  2 --os-variant rhel6 --network bridge=br1 --graphics none --console pty,target_type=serial --location '/mnt' --extra-args 'console=ttyS0,115200n8 serial'
+
+挂载qcow2镜像文件
+virsh shutdown name 
+ 
+guestfish -a /name.qcow2 --ro <<_EOF_
+run
+list-filesystems
+_EOF_
+
+guestmount -a /name.qcow2 -m  /dev/vg_centosbase/lv_root --rw /mnt
+
+#删除vm
+virsh destroy test100 
+virsh undefine test100
+
+#启动vm
+virsh start namevm
+
+#clone vm
+virt-clone --connect=qemu:///system -o oldname -n newname -f /newname.qcow2
+
+#查看kvm支持的安装操作系统
+ virt-install --os-variant list
+
+#kvm增加内存
+virsh edit vmname
+virsh shutdown vmname
+virsh start vmname
+
+扩展磁盘
+qemu-img info /data/kvm/test100_temp.qcow2 
+查看 file format: raw
+virt-sparsify --format raw --convert qcow2   --compress  test100_temp.qcow2 test100_new.qcow2
+virt-sparsify --format raw test100_temp.qcow2 test100.qcow2
+https://github.com/fubralimited/CentOS-KVM-Image-Tools
+
+#查看vm vnc port
+virsh vncdisplay vmname
+
+
+
+
+
+#安装Windows
+virt-install --name server2008 --ram 2048 --cdrom=/data/ser2008.iso --disk=./server2008.qcow2,size=50 --network bridge=br1 --graphic vnc,port=5945,listen=0.0.0.0  --os-variant=win2k8  --force --autostart 
+
+http://docs.openstack.org/image-guide/content/ch_modifying_images.html
+
+#扩展windows 磁盘
+virsh shutdown  "windowsvm"
+qemu-img resize /windowsvm.qcow2 +10G
+virsh start "windowsvm"
+https://rbgeek.wordpress.com/2013/08/16/how-to-resize-the-kvm-virtual-machine-disk/
+登录到windows的机器，在“服务器管理器”---“存储”---“磁盘管理”  扩展需要加大的磁盘 
+
+#内存
+https://support.opennodecloud.com/wiki/doku.php?id=usrdoc:os:win-guest
+更改后virsh edit windowsvm
+
+#添加usb设备
+http://m.blog.chinaunix.net/uid-26000137-id-4241064.html
+
+#kvm kickstart
+virt-install --name  kscfg --ram 2048  --disk=./kscfg.qcow2,size=50 --network bridge=br1 --graphic vnc,port=5944,listen=0.0.0.0  --os-variant=rhel6  --location=/mnt -x "ks=http://192.168.6.160/mirrors/centos/6.5/ks.cfg"
+
+
+
+--nonsparse	Fully allocate the storage when creating. This is deprecated in favort of "--disk"

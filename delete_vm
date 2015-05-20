@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+#Description : Shell script used to delete Currently Virtual Machine
+#Author: unyang
+#mail: hangunang@126.com
+#Version: v1.0
+#refer:https://github.com/fubralimited/CentOS-KVM-Image-Tools/tree/master/scripts
+#list Currently Virtual Machine
+virsh list --all
+
+#where Virtual Machine you want to delete
+printf "what is Virtual Machine you want to delete? please input Virtual Machine name? --> "
+read NAME
+
+#Judge Virtual Machine exist
+virsh list --all | grep $NAME  2> /dev/null
+set -xv
+if [[ $? -ne 0 ]]; then
+   echo "Virtual Machine not find in Local machine"
+   exit
+fi
+
+#the Virtual Machine match 
+
+
+#list=`virsh list --all | awk '{print $2}' | grep -v $NAME`
+
+
+
+echo "you want delete $NAME Virtual Machine"
+VMPATH="`virsh dumpxml $NAME | grep "<source file='" | awk -F "'" '{print $2}'`"
+#echo $VMPATH
+
+#Judge Virtual Machine name running or down
+status="`virsh list --all | grep $NAME | awk -F " " '{print $3,$4}'`"
+echo $status
+#set -xv
+if [[ "$status" == "running" ]]; then
+        echo "Virtual Machine is running"
+        virsh shutdown $NAME
+fi
+#if [[ "$status" == "shut off" ]]; then
+#        echo "Virtual Machine is shutdown"
+#fi
+
+#delete the Virtual Machine img
+rm -rf  $VMPATH
+
+#undefine the Virtual Machine
+
+virsh undefine  $NAME
+
+echo "The Virtual Machine $NAME is deleted"

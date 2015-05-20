@@ -1,0 +1,41 @@
+#/usr/bin/bash env
+#This script is resize vm space
+#Author: unyang
+#mail: hangunang@126.com
+#Version: v1.0
+#refer: https://github.com/fubralimited/CentOS-KVM-Image-Tools/tree/master/scripts
+
+#USAGE EXAMPLE
+set -x
+#This script just run as root
+if [ `whoami` != root ]; then
+        echo "ERROR: This script must be run as root"
+        exit 1
+fi
+
+#input the Virtual machine 
+if [ -z "$1" ];then
+        echo "ERROR: No arguemnet aupplied. Please provide the  Virtual machine name"
+        exit 1
+fi
+
+VMNAME=$1
+VMSIZE=$2
+#check input 
+vmall=`virsh list --all | awk -F " " '{print $2}' | grep -v Name`
+
+if [[ "$?" == "0" ]];then
+        VMFILE=`virsh dumpxml $VMNAME | grep "<source file='"  | awk -F "'" '{print $2}'`
+        virsh shutdown $VMNAME  && sleep 120
+        cp $VMFILE /tmp
+        tmp_vm=`ls /tmp/*.qcow2`
+        qemu-img resize  $tmp_vm  $VMSIZE
+        virt-resize --expand /dev/vda2 --LV-expand /dev/vg_$VMNAME/lv_root $VMFILE  $tmp_vm  #need change Partition
+        mv -f $VMFILE $VMFILE.backup
+        mv $tmp_vm $VMFILE
+        chown qemu:qemu $VMFILE
+        virsh start $VMNAME
+     else
+        echo "Virtual machine not find!!!"
+        exit 1
+fi

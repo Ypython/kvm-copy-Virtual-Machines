@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+#
+#centos 6.5 x86_64
+#
 #ensure script is being run as root
 if [ `whoami` != root ]; then
    echo "ERROR: This script must be run as root" 1>&2
@@ -8,11 +11,12 @@ fi
 #set variables
 IP=$1  #just the variables of $1 is input the last one. example IP 192.168..1.1 you just only input 1
 name=ser6-$IP
-uuid=$IP
+#uuid=$IP
+uuid=`uuidgen`
 filename=ser6-$IP
 #mac="`echo $IP | sed 's/^.//'`"
-mac="`echo $IP | md5sum | cut -b1,2`"
-vnc=59`echo $IP | sed 's/^.//'`
+mac=`echo $IP | md5sum | cut -b1,2`
+vnc=59`echo $IP`
 mkdir -p /data/kvm/clustserver/ser$IP
 path="/data/kvm/clustserver/ser$IP"
 
@@ -40,7 +44,7 @@ umount /mnt/file
 
 #change the xml file
 sed -i "s/demo/$name/g" /data/kvm/clustserver/ser$IP/$name.xml  #change name and virtual machine name
-sed -i "s/xxx/$IP/g" /data/kvm/clustserver/ser$IP/$name.xml     #change uuid
+sed -i "s/7c382555-3876-f897-1f95-7f8d02782xxx/$uuid/g" /data/kvm/clustserver/ser$IP/$name.xml     #change uuid
 sed -i "s/ee/$mac/g" /data/kvm/clustserver/ser$IP/$name.xml     #chang mac
 sed -i "s/5901/$vnc/g" /data/kvm/clustserver/ser$IP/$name.xml   #change vnc port
 sed -i "s/kkk/ser$IP/g" /data/kvm/clustserver/ser$IP/$name.xml  #change virtual machine path

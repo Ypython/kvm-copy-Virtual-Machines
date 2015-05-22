@@ -10,7 +10,8 @@ IP=$1  #just the variables of $1 is input the last one. example IP 192.168..1.1 
 name=ser6-$IP
 uuid=$IP
 filename=ser6-$IP
-mac="`echo $IP | sed 's/^.//'`"
+#mac="`echo $IP | sed 's/^.//'`"
+mac="`echo $IP | md5sum | cut -b1,2`"
 vnc=59`echo $IP | sed 's/^.//'`
 mkdir -p /data/kvm/clustserver/ser$IP
 path="/data/kvm/clustserver/ser$IP"

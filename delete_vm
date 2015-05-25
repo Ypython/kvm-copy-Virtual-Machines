@@ -29,6 +29,7 @@ fi
 echo "you want delete $NAME Virtual Machine"
 VMPATH="`virsh dumpxml $NAME | grep "<source file='" | awk -F "'" '{print $2}'`"
 #echo $VMPATH
+DIR=`dirname $VMPATH`
 
 #Judge Virtual Machine name running or down
 status="`virsh list --all | grep $NAME | awk -F " " '{print $3,$4}'`"
@@ -42,11 +43,14 @@ fi
 #        echo "Virtual Machine is shutdown"
 #fi
 
-#delete the Virtual Machine img
-rm -rf  $VMPATH
 
-#undefine the Virtual Machine
-
+#undefine the Virtual Machine AND destroy 
+virsh destroy  $NAME
 virsh undefine  $NAME
+
+#delete the Virtual Machine img
+rm -rf   $DIR
+
+
 
 echo "The Virtual Machine $NAME is deleted"
